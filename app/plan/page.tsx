@@ -54,11 +54,12 @@ export default function Plan() {
             <h2 className="t-head">Work in process</h2>
             <span className="t-caption">{WIP.filter((w) => w.status !== "done").length} active · 2 stations at risk</span>
           </div>
-          <table className="w-full">
+          <div className="overflow-x-auto">
+          <table className="w-full" style={{ minWidth: "44rem" }}>
             <thead>
               <tr className="border-b border-line-soft">
                 {["WO", "Serial", "Operation", "Station", "Step", "On step", "Status"].map((h) => (
-                  <th key={h} className="t-label px-3 py-2 text-left font-[650]">{h}</th>
+                  <th key={h} className="t-label px-3 py-2 text-left">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -90,6 +91,7 @@ export default function Plan() {
               })}
             </tbody>
           </table>
+          </div>
           <p className="t-caption border-t border-line-soft" style={{ padding: "var(--pad)" }}>
             Same design system as the technician screen — same tokens, same components. Only
             the density and contrast tokens change. A planner is reading twenty rows with a

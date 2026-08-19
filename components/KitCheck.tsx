@@ -170,17 +170,21 @@ export function KitCheck({
               {v === "wrong" && (
                 <div className="mt-2">
                   <p className="t-sub fg-stop">Wrong part in bin {f.bin}</p>
-                  <div className="mt-3 flex items-center gap-5">
-                    <figure className="fg-go text-center">
-                      <PartArt pn={f.pn} size={84} />
-                      <figcaption className="t-id fg-go">{f.pn}</figcaption>
-                      <figcaption className="t-caption fg-go">spec · .063 thick</figcaption>
+                  <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-5">
+                    <figure className="fg-go flex items-center gap-3 sm:flex-col sm:gap-0 sm:text-center">
+                      <PartArt pn={f.pn} size={76} />
+                      <div>
+                        <figcaption className="t-id fg-go">{f.pn}</figcaption>
+                        <figcaption className="t-caption fg-go">spec · .063 thick</figcaption>
+                      </div>
                     </figure>
                     <span className="t-label">vs</span>
-                    <figure className="fg-stop text-center">
-                      <PartArt pn={f.wrongPn!} size={84} />
-                      <figcaption className="t-id fg-stop">{f.wrongPn}</figcaption>
-                      <figcaption className="t-caption fg-stop">in bin · .032 thick</figcaption>
+                    <figure className="fg-stop flex items-center gap-3 sm:flex-col sm:gap-0 sm:text-center">
+                      <PartArt pn={f.wrongPn!} size={76} />
+                      <div>
+                        <figcaption className="t-id fg-stop">{f.wrongPn}</figcaption>
+                        <figcaption className="t-caption fg-stop">in bin · .032 thick</figcaption>
+                      </div>
                     </figure>
                   </div>
                   <p className="t-caption mt-1">

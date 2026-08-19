@@ -45,8 +45,8 @@ export default function Floor() {
     <div data-surface="floor" className="flex h-dvh flex-col bg-bg">
       {/* ---- status rail: who, what, where. Never scrolls away. ---- */}
       <header className="shrink-0 border-b border-line" style={{ padding: "var(--pad)" }}>
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-baseline gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+          <div className="flex items-baseline gap-2.5">
             <span className="t-id-lg">{WO.id}</span>
             <span className="chip chip-info">{WO.serial}</span>
           </div>
