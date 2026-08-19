@@ -5,7 +5,10 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "guard": "node scripts/guard.mjs",
+    "guard:audit": "node scripts/guard.mjs --audit",
+    "prepare": "node scripts/install-hook.mjs"
   },
   "dependencies": {
     "next": "16.3.1",
