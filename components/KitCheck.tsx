@@ -79,7 +79,7 @@ export function KitCheck({
             {fasteners.map((f) => (
               <li key={f.pn} className="flex items-center justify-between gap-4">
                 <div className="flex min-w-0 items-center gap-3">
-                  <PartArt pn={f.pn} size={48} />
+                  <PartArt pn={f.pn} size={68} />
                   <div className="min-w-0">
                     <p className="t-id">{f.pn}</p>
                     <p className="t-caption truncate">{f.nomenclature}</p>
@@ -174,7 +174,7 @@ export function KitCheck({
                   </div>
                   <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-5">
                     <figure className="fg-go flex items-center gap-3 sm:flex-col sm:gap-0 sm:text-center">
-                      <PartArt pn={f.pn} size={76} />
+                      <PartArt pn={f.pn} size={104} />
                       <div>
                         <figcaption className="t-id fg-go">{f.pn}</figcaption>
                         <figcaption className="t-caption fg-go">spec · .063 thick</figcaption>
@@ -182,7 +182,7 @@ export function KitCheck({
                     </figure>
                     <span className="t-label">vs</span>
                     <figure className="fg-stop flex items-center gap-3 sm:flex-col sm:gap-0 sm:text-center">
-                      <PartArt pn={f.wrongPn!} size={76} />
+                      <PartArt pn={f.wrongPn!} size={104} />
                       <div>
                         <figcaption className="t-id fg-stop">{f.wrongPn}</figcaption>
                         <figcaption className="t-caption fg-stop">in bin · .032 thick</figcaption>
@@ -199,7 +199,7 @@ export function KitCheck({
 
             {v !== "wrong" && (
               <div className="flex shrink-0 items-center gap-3 self-center">
-                <PartArt pn={f.pn} size={52} />
+                <PartArt pn={f.pn} size={76} />
                 <p className={v === "ok" ? "t-num fg-go leading-none" : "t-num fg-stop leading-none"}>
                   {f.found}
                   <span className="t-head" style={{ opacity: 0.55 }}>/{f.qty}</span>

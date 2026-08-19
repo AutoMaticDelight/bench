@@ -13,7 +13,7 @@ const stroke = {
 export function ScrewArt({ size = 56 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 48 48" aria-hidden role="img" className="fg-dim">
-      <g {...stroke}>
+      <g {...stroke} transform="translate(24 24) scale(1.3) translate(-24 -24)">
         {/* head, three-quarter */}
         <ellipse cx="24" cy="11" rx="10" ry="3.6" />
         <path d="M14 11v6.5M34 11v6.5" />
@@ -33,14 +33,11 @@ export function WasherArt({ thin = false, size = 56 }: { thin?: boolean; size?: 
   const t = thin ? 2.6 : 8;
   return (
     <svg width={size} height={size} viewBox="0 0 48 48" aria-hidden role="img" className="fg-dim">
-      <g {...stroke}>
+      <g {...stroke} transform="translate(24 24) scale(1.3) translate(-24 -24)">
         <ellipse cx="24" cy="20" rx="14" ry="5" />
         <ellipse cx="24" cy="20" rx="5.5" ry="2" />
         <path d={`M10 20v${t}M38 20v${t}`} />
         <path d={`M10 ${20 + t}a14 5 0 0 0 28 0`} />
-        {/* thickness call-out — the whole point of this drawing */}
-        <path d={`M43 20v${t}`} strokeWidth={1} />
-        <path d={`M41.5 20h3M41.5 ${20 + t}h3`} strokeWidth={1} />
       </g>
     </svg>
   );
@@ -49,7 +46,7 @@ export function WasherArt({ thin = false, size = 56 }: { thin?: boolean; size?: 
 export function NutArt({ size = 56 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 48 48" aria-hidden role="img" className="fg-dim">
-      <g {...stroke}>
+      <g {...stroke} transform="translate(24 24) scale(1.3) translate(-24 -24)">
         {/* hex top face, foreshortened */}
         <path d="M11 18.5 18 13h12l7 5.5-7 5.5H18Z" />
         <ellipse cx="24" cy="18.5" rx="5.4" ry="2.8" />
