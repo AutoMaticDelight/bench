@@ -55,6 +55,8 @@
   --on-stop:   #ffffff;
   --scrim:     rgb(0 0 0 / 0.62);
   --press:     rgb(0 0 0 / 0.22);
+  --data-on:     #57a9ea;
+  --data-behind: #e0922a;
 
   /* density */
   --ctl-h:  4rem;      /* 64px — gloved minimum */
@@ -97,6 +99,10 @@
   --on-stop:   #ffffff;
   --scrim:     rgb(0 0 0 / 0.45);
   --press:     rgb(0 0 0 / 0.18);
+  /* chart marks — stepped for a light surface and validated for CVD
+     separation, chroma and contrast. Not interchangeable with status. */
+  --data-on:     #0b72c4;
+  --data-behind: #a85f00;
 
   --ctl-h:  2.5rem;    /* 40px — cursor */
   --ctl-xl: 3rem;

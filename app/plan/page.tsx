@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { NCRS, WIP } from "@/lib/data";
 import { actions, useBench } from "@/lib/store";
 import { IconAlert, IconArrow, IconBox, IconRunner } from "@/components/Icon";
+import { Throughput } from "@/components/Throughput";
 
 function ago(ms: number, now: number) {
   const s = Math.max(0, Math.round((now - ms) / 1000));
@@ -31,6 +32,9 @@ export default function Plan() {
   }, []);
 
   const openShortages = bench.shortages.filter((s) => s.status !== "delivered");
+  const openShort = openShortages.length;
+  const mrb = NCRS.filter((n) => n.disposition === "awaiting MRB").length + bench.ncrs.length;
+  const atRisk = WIP.filter((w) => w.status === "blocked" || w.status === "queued").length;
 
   return (
     <div data-surface="desk" className="min-h-dvh bg-bg">
@@ -46,6 +50,47 @@ export default function Plan() {
           </div>
         </div>
       </header>
+
+      {/* ---- the board proper: state first, then the numbers behind it ---- */}
+      <section className="mx-auto max-w-[1400px]" style={{ padding: "var(--pad)", paddingBottom: 0 }}>
+        <div className="panel" style={{ padding: "var(--pad)" }}>
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="t-label">Integration · Shift A</p>
+              <div className="mt-1 flex items-center gap-3">
+                <span className="animate-flash shrink-0 rounded-full"
+                  style={{ width: "0.875rem", height: "0.875rem", background: atRisk ? "var(--color-stop)" : "var(--color-go)" }} />
+                <h1 className="t-display">{atRisk ? `${atRisk} stations at risk` : "All stations running"}</h1>
+              </div>
+              <p className="t-sub mt-1" style={{ color: "var(--fg-dim)" }}>
+                WO-2288 held 3h 32m on NCR-0447 · kit K-2295 incomplete
+                {openShort > 0 && ` · ${openShort} line${openShort > 1 ? "s" : ""} short at the bench`}
+              </p>
+            </div>
+            <span className={openShort > 0 ? "chip chip-stop" : "chip chip-go"}>
+              {openShort > 0 ? "supply outstanding" : "supply clear"}
+            </span>
+          </div>
+
+          <dl className="mt-5 grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            {[
+              ["Units in build", "3", "BUS-103 · 104 · 105"],
+              ["Steps this shift", "86", "plan 96"],
+              ["Stations on plan", "3 of 5", "2 holding"],
+              ["Open shortages", String(openShort), openShort ? "runner dispatched" : "none outstanding"],
+              ["Awaiting MRB", String(mrb), "oldest 3h 32m"],
+            ].map(([label, value, sub]) => (
+              <div key={label} className="panel" style={{ padding: "var(--pad)", background: "var(--panel-2)" }}>
+                <dt className="t-label">{label}</dt>
+                <dd className="t-mega mt-1 leading-none">{value}</dd>
+                <dd className="t-caption mt-1">{sub}</dd>
+              </div>
+            ))}
+          </dl>
+
+          <div className="rule mt-5 pt-5"><Throughput /></div>
+        </div>
+      </section>
 
       <div className="mx-auto grid max-w-[1400px] gap-4 lg:grid-cols-[1fr_360px]" style={{ padding: "var(--pad)" }}>
         {/* ---------------- WIP ---------------- */}
