@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { IconCheck } from "./Icon";
-import { StackUpArt } from "./art/Parts";
+import { AssemblyDiagram } from "./art/Assembly";
 
 /* Order is enforced, one item at a time. The list does not present itself as
    seven equal checkboxes a technician can tick in any order at the end of the
@@ -33,11 +33,17 @@ export function SubSteps({
   return (
     <div className="flex flex-col" style={{ gap: "var(--gap)" }}>
       <figure className="panel" style={{ padding: "var(--pad)" }}>
-        <p className="t-label mb-2">Stack-up — outboard to inboard</p>
-        <StackUpArt />
+        <div className="mb-2 flex items-center justify-between">
+          <p className="t-label">Stack-up — outboard to inboard</p>
+          <span className={complete ? "chip chip-go" : "chip chip-mute"}>
+            {Math.min(at, items.length)} of {items.length}
+          </span>
+        </div>
+        <AssemblyDiagram done={at} current={complete ? -1 : at} />
         <figcaption className="t-caption mt-1">
-          Both washers sit against the joint faces. The nylon insert on the locknut faces
-          away from the joint.
+          {complete
+            ? "Stack-up complete, in order, each item timestamped."
+            : "White and pulsing is the part in your hand right now. Green is placed."}
         </figcaption>
       </figure>
 

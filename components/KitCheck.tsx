@@ -79,13 +79,16 @@ export function KitCheck({
             {fasteners.map((f) => (
               <li key={f.pn} className="flex items-center justify-between gap-4">
                 <div className="flex min-w-0 items-center gap-3">
-                  <PartArt pn={f.pn} size={44} />
+                  <PartArt pn={f.pn} size={48} />
                   <div className="min-w-0">
                     <p className="t-id">{f.pn}</p>
                     <p className="t-caption truncate">{f.nomenclature}</p>
                   </div>
                 </div>
-                <span className="t-id-lg shrink-0">{f.qty}</span>
+                <div className="shrink-0 text-right">
+                  <p className="t-num leading-none">{f.qty}</p>
+                  <p className="t-label">req</p>
+                </div>
               </li>
             ))}
           </ul>
@@ -157,19 +160,18 @@ export function KitCheck({
               </p>
               <p className="t-caption truncate">{f.nomenclature}</p>
 
-              {v === "ok" && (
-                <p className="t-sub mt-2 fg-go">
-                  {f.found} of {f.qty} verified · bin {f.bin}
-                </p>
-              )}
+              {v === "ok" && <p className="t-sub mt-2 fg-go">Verified · bin {f.bin}</p>}
               {v === "short" && (
-                <p className="t-sub mt-2 fg-stop">
-                  Short {f.qty - f.found} — {f.found} of {f.qty} in the tray
-                </p>
+                <p className="t-sub mt-2 fg-stop">Short {f.qty - f.found} · bin {f.bin}</p>
               )}
               {v === "wrong" && (
                 <div className="mt-2">
-                  <p className="t-sub fg-stop">Wrong part in bin {f.bin}</p>
+                  <div className="flex items-center gap-3">
+                    <p className="t-num fg-stop leading-none">
+                      0<span className="t-head" style={{ opacity: 0.55 }}>/{f.qty}</span>
+                    </p>
+                    <p className="t-sub fg-stop">Wrong part in bin {f.bin}</p>
+                  </div>
                   <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-5">
                     <figure className="fg-go flex items-center gap-3 sm:flex-col sm:gap-0 sm:text-center">
                       <PartArt pn={f.pn} size={76} />
@@ -195,7 +197,15 @@ export function KitCheck({
               )}
             </div>
 
-            {v !== "wrong" && <div className="shrink-0 self-center"><PartArt pn={f.pn} size={64} /></div>}
+            {v !== "wrong" && (
+              <div className="flex shrink-0 items-center gap-3 self-center">
+                <PartArt pn={f.pn} size={52} />
+                <p className={v === "ok" ? "t-num fg-go leading-none" : "t-num fg-stop leading-none"}>
+                  {f.found}
+                  <span className="t-head" style={{ opacity: 0.55 }}>/{f.qty}</span>
+                </p>
+              </div>
+            )}
           </div>
         );
       })}
