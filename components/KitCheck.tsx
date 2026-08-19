@@ -34,10 +34,14 @@ export function KitCheck({
 }) {
   const [phase, setPhase] = useState<Phase>("idle");
   const [escalated, setEscalated] = useState(false);
+  const [confirmed, setConfirmed] = useState<string[]>([]);
   const bench = useBench();
   const problems = fasteners.filter((f) => verdictOf(f) !== "ok");
   const raised = bench.shortages.filter((s) => s.wo === wo);
-  const delivered = raised.length > 0 && raised.every((s) => s.status === "delivered");
+  const delivered =
+    raised.length > 0 &&
+    raised.length === problems.length &&
+    raised.every((s) => s.status === "delivered" && confirmed.includes(s.pn));
 
   useEffect(() => {
     if (phase !== "capturing") return;
@@ -52,6 +56,7 @@ export function KitCheck({
   const nProblems = problems.length;
   const nRaised = raised.length;
   const nOutstanding = problems.filter((f) => !bench.shortages.some((x) => x.wo === wo && x.pn === f.pn)).length;
+  const awaitingConfirm = raised.some((r) => r.status === "delivered" && !confirmed.includes(r.pn));
   useEffect(() => {
     if (phase === "idle") {
       setRail({ label: "Capture kit tray", run: () => setPhase("capturing") });
@@ -62,12 +67,16 @@ export function KitCheck({
     } else if (nOutstanding > 0) {
       setRail({ label: `Alert supply — ${nOutstanding} line${nOutstanding > 1 ? "s" : ""}`, run: pageSupply });
     } else if (!delivered) {
-      setRail({ label: "Supply alerted — waiting on delivery", disabled: true });
+      setRail(
+        awaitingConfirm
+          ? { label: "Confirm the parts above to continue", disabled: true }
+          : { label: "Supply alerted — waiting on delivery", disabled: true },
+      );
     } else {
       setRail(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, nProblems, nRaised, nOutstanding, delivered]);
+  }, [phase, nProblems, nRaised, nOutstanding, delivered, awaitingConfirm]);
 
   function raiseFor(lines: Fastener[]) {
     const made = actions.raiseShortage(
@@ -203,25 +212,39 @@ export function KitCheck({
                     </button>
                   );
                 }
+                const isConfirmed = confirmed.includes(f.pn);
+
+                if (req.status === "delivered" && !isConfirmed) {
+                  return (
+                    <button
+                      onClick={() => setConfirmed((c) => [...c, f.pn])}
+                      className="btn btn-go mt-3 w-full"
+                    >
+                      <IconCheck size={22} />
+                      Tap to confirm — {f.qty} {f.pn} in hand
+                    </button>
+                  );
+                }
+
                 return (
                   <div
                     className="panel mt-3 flex items-center justify-between gap-3"
                     style={{
                       padding: "0.625rem 0.75rem",
-                      background: req.status === "delivered" ? "var(--go-soft)" : "var(--panel-2)",
+                      background: isConfirmed ? "var(--go-soft)" : "var(--panel-2)",
                       borderColor: "transparent",
                     }}
                   >
                     <span className="t-caption">
                       {req.id} ·{" "}
-                      {req.status === "open"
-                        ? "sent to Bay 2 supply"
-                        : req.status === "ack"
-                          ? "runner on the way"
-                          : "delivered to your bench"}
+                      {isConfirmed
+                        ? "confirmed at the bench"
+                        : req.status === "open"
+                          ? "sent to Bay 2 supply"
+                          : "runner on the way"}
                     </span>
-                    <span className={req.status === "delivered" ? "chip chip-go" : "chip chip-hold"}>
-                      {req.status === "delivered" ? "here" : "en route"}
+                    <span className={isConfirmed ? "chip chip-go" : "chip chip-hold"}>
+                      {isConfirmed ? "in hand" : "en route"}
                     </span>
                   </div>
                 );
