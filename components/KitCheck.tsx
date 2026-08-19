@@ -51,6 +51,7 @@ export function KitCheck({
 
   const nProblems = problems.length;
   const nRaised = raised.length;
+  const nOutstanding = problems.filter((f) => !bench.shortages.some((x) => x.wo === wo && x.pn === f.pn)).length;
   useEffect(() => {
     if (phase === "idle") {
       setRail({ label: "Capture kit tray", run: () => setPhase("capturing") });
@@ -58,19 +59,19 @@ export function KitCheck({
       setRail({ label: "Reading kit tray…", disabled: true });
     } else if (nProblems === 0) {
       setRail(null);
-    } else if (nRaised === 0) {
-      setRail({ label: `Alert supply — ${nProblems} lines`, run: pageSupply });
+    } else if (nOutstanding > 0) {
+      setRail({ label: `Alert supply — ${nOutstanding} lines`, run: pageSupply });
     } else if (!delivered) {
       setRail({ label: "Supply alerted — waiting on delivery", disabled: true });
     } else {
       setRail(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, nProblems, nRaised, delivered]);
+  }, [phase, nProblems, nRaised, nOutstanding, delivered]);
 
-  function pageSupply() {
+  function raiseFor(lines: Fastener[]) {
     const made = actions.raiseShortage(
-      problems.map((f) => ({
+      lines.map((f) => ({
         pn: f.pn,
         nomenclature: f.nomenclature,
         need: f.qty,
@@ -88,6 +89,11 @@ export function KitCheck({
       setTimeout(() => actions.advanceShortage(m.id), 2200 + i * 400);
       setTimeout(() => actions.advanceShortage(m.id), 6200 + i * 400);
     });
+  }
+
+  const pageSupply = () => raiseFor(problems.filter((f) => !raisedFor(f.pn)));
+  function raisedFor(pn: string) {
+    return bench.shortages.find((x) => x.wo === wo && x.pn === pn) ?? null;
   }
 
   if (phase === "idle") {
@@ -181,6 +187,45 @@ export function KitCheck({
               {v === "short" && (
                 <p className="t-sub mt-2 fg-stop">Short {f.qty - f.found} · bin {f.bin}</p>
               )}
+
+              {v !== "ok" && (() => {
+                const req = raisedFor(f.pn);
+                if (!req) {
+                  return (
+                    <button
+                      onClick={() => raiseFor([f])}
+                      className="btn btn-primary mt-3 w-full"
+                    >
+                      <IconRunner size={22} />
+                      {v === "wrong"
+                        ? `Bring the correct part — ${f.qty}`
+                        : `Bring ${f.qty - f.found} more to my station`}
+                    </button>
+                  );
+                }
+                return (
+                  <div
+                    className="panel mt-3 flex items-center justify-between gap-3"
+                    style={{
+                      padding: "0.625rem 0.75rem",
+                      background: req.status === "delivered" ? "var(--go-soft)" : "var(--panel-2)",
+                      borderColor: "transparent",
+                    }}
+                  >
+                    <span className="t-caption">
+                      {req.id} ·{" "}
+                      {req.status === "open"
+                        ? "sent to Bay 2 supply"
+                        : req.status === "ack"
+                          ? "runner on the way"
+                          : "delivered to your bench"}
+                    </span>
+                    <span className={req.status === "delivered" ? "chip chip-go" : "chip chip-hold"}>
+                      {req.status === "delivered" ? "here" : "en route"}
+                    </span>
+                  </div>
+                );
+              })()}
               {v === "wrong" && (
                 <div className="mt-2">
                   <div className="flex items-center gap-3">
@@ -227,7 +272,7 @@ export function KitCheck({
         );
       })}
 
-      {problems.length > 0 && raised.length === 0 && (
+      {problems.some((f) => !raisedFor(f.pn)) && (
         <div className="panel" style={{ padding: "var(--pad)", borderColor: "var(--color-stop)" }}>
           <div className="flex items-start gap-3">
             <IconAlert size={24} className="mt-0.5 shrink-0 fg-stop" />
@@ -241,7 +286,7 @@ export function KitCheck({
 
           <button onClick={pageSupply} className="btn btn-primary btn-xl mt-4 w-full">
             <IconRunner size={26} />
-            Alert supply runner — bring {problems.length} lines
+            Alert supply — bring all {problems.filter((f) => !raisedFor(f.pn)).length} lines
           </button>
 
           <button
