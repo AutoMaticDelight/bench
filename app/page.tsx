@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { IconArrow } from "@/components/Icon";
+import { Showcase } from "@/components/Showcase";
 
 const DECISIONS: { h: string; p: string }[] = [
   {
@@ -42,6 +43,14 @@ export default function Home() {
           who has to know the second that step goes sideways. Built as an argument, not a mockup —
           it runs, it measures itself, and the two surfaces talk to each other.
         </p>
+
+        <div className="mt-8">
+          <Showcase />
+          <p className="t-caption mt-2">
+            Live components, not screenshots — the same code the technician surface renders,
+            re-resolving its tokens against the floor palette inside this page.
+          </p>
+        </div>
 
         <div className="mt-8 grid gap-3 sm:grid-cols-2">
           <Link href="/floor" className="panel group block transition-colors hover:border-ink-400" style={{ padding: "1.25rem" }}>
