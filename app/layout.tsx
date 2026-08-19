@@ -16,7 +16,7 @@ const mono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Bench — build execution, concept study",
   description:
-    "A concept study for shop-floor build execution software: one traveler, two surfaces. Bryan.",
+    "A concept study for shop-floor build execution software: one traveler, two surfaces. Bryan Holland.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
