@@ -60,7 +60,7 @@ export function KitCheck({
     } else if (nProblems === 0) {
       setRail(null);
     } else if (nOutstanding > 0) {
-      setRail({ label: `Alert supply — ${nOutstanding} lines`, run: pageSupply });
+      setRail({ label: `Alert supply — ${nOutstanding} line${nOutstanding > 1 ? "s" : ""}`, run: pageSupply });
     } else if (!delivered) {
       setRail({ label: "Supply alerted — waiting on delivery", disabled: true });
     } else {
@@ -277,7 +277,7 @@ export function KitCheck({
           <div className="flex items-start gap-3">
             <IconAlert size={24} className="mt-0.5 shrink-0 fg-stop" />
             <div>
-              <p className="t-head fg-stop">Cannot proceed — {problems.length} lines wrong</p>
+              <p className="t-head fg-stop">Cannot proceed — {problems.length} line{problems.length > 1 ? "s" : ""} wrong</p>
               <p className="t-sub mt-1" style={{ color: "var(--fg-dim)" }}>
                 You cannot fix this at the bench. Alert someone who can.
               </p>
@@ -286,7 +286,7 @@ export function KitCheck({
 
           <button onClick={pageSupply} className="btn btn-primary btn-xl mt-4 w-full">
             <IconRunner size={26} />
-            Alert supply — bring all {problems.filter((f) => !raisedFor(f.pn)).length} lines
+            Alert supply — bring all {problems.filter((f) => !raisedFor(f.pn)).length}{problems.filter((f) => !raisedFor(f.pn)).length > 1 ? " lines" : " line"}
           </button>
 
           <button
