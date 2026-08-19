@@ -87,6 +87,18 @@ export default function Home() {
           </p>
         </div>
 
+        <div className="panel mt-3 flex flex-wrap items-center justify-between gap-3"
+          style={{ padding: "1.25rem" }}>
+          <div>
+            <p className="t-head">Want the reasoning, not just the screens?</p>
+            <p className="t-caption mt-1">
+              Research approach, the six decisions in full, what I&apos;d measure, and what this
+              prototype does not prove — on automaticdelight.com.
+            </p>
+          </div>
+          <a href="https://automaticdelight.com/bench" className="btn btn-primary">Read the case study <IconArrow size={18} /></a>
+        </div>
+
         <hr className="rule my-12" />
 
         <h2 className="t-title">Six decisions, and why</h2>
