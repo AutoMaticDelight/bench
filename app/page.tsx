@@ -128,7 +128,7 @@ export default function Home() {
 
         <h2 className="t-title">What this is</h2>
         <p className="t-body mt-3" style={{ color: "var(--fg-dim)" }}>
-          An unsolicited concept study by <strong style={{ color: "var(--fg)" }}>Bryan Chasteen</strong>,
+          An unsolicited concept study by <strong style={{ color: "var(--fg)" }}>Bryan</strong>,
           built to think through shop-floor build execution properly rather than describe it in a deck.
           It is not affiliated with, endorsed by, or built from the internal software of any company,
           and contains no proprietary information — every part number, torque value and work order in
