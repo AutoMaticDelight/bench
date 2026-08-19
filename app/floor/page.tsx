@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { WO } from "@/lib/data";
+import type { RailAction } from "@/lib/rail";
 import { actions, useBench } from "@/lib/store";
 import { armTapCounter, tapDelta, tapMark } from "@/lib/taps";
 import { KitCheck } from "@/components/KitCheck";
@@ -19,6 +20,7 @@ export default function Floor() {
   const [ncrOpen, setNcrOpen] = useState(false);
   const [shot, setShot] = useState(false);
   const [mark, setMark] = useState({ taps: 0, ms: 0 });
+  const [rail, setRail] = useState<RailAction | null>(null);
   const bench = useBench();
   const step = WO.steps[i];
   const done = i >= WO.steps.length;
@@ -36,6 +38,7 @@ export default function Floor() {
     setI(i + 1);
     setReady(false);
     setShot(false);
+    setRail(null);
     setMark(tapMark());
   }
 
@@ -112,10 +115,11 @@ export default function Floor() {
               serial={WO.serial}
               station={WO.station}
               onResolved={onResolved}
+              setRail={setRail}
             />
           )}
 
-          {step.kind === "torque" && <TorqueSequence onDone={() => setReady(true)} />}
+          {step.kind === "torque" && <TorqueSequence onDone={() => setReady(true)} setRail={setRail} />}
 
           {step.kind === "inspect" &&
             (shot ? (
@@ -130,9 +134,15 @@ export default function Floor() {
                 </div>
               </div>
             ) : (
-              <button className="btn btn-primary btn-xl w-full" onClick={() => { setShot(true); setReady(true); }}>
-                <IconCamera size={28} /> Capture witness photo
-              </button>
+              <div className="panel" style={{ padding: "var(--pad)" }}>
+                <div className="flex items-start gap-3">
+                  <IconCamera size={26} className="mt-0.5 shrink-0" />
+                  <p className="t-sub">
+                    Frame all eight fastener heads and the bracket face in one shot. The
+                    witness line has to be continuous in the photo, not just on the part.
+                  </p>
+                </div>
+              </div>
             ))}
 
           {step.kind === "buyoff" && (
@@ -167,6 +177,21 @@ export default function Floor() {
       >
         {step.kind === "buyoff" ? (
           <HoldToCommit label="Hold to sign buy-off" sub="1.2 seconds · badge 4471" onCommit={advance} />
+        ) : rail ? (
+          <button
+            disabled={rail.disabled}
+            onClick={rail.run}
+            className={`btn btn-xl w-full ${rail.variant ?? "btn-primary"}`}
+          >
+            {rail.label}
+          </button>
+        ) : step.kind === "inspect" && !shot ? (
+          <button
+            onClick={() => { setShot(true); setReady(true); }}
+            className="btn btn-primary btn-xl w-full"
+          >
+            <IconCamera size={26} /> Capture witness photo
+          </button>
         ) : (
           <button
             disabled={!ready}

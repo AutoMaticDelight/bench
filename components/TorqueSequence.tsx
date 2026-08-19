@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { IconCheck } from "./Icon";
+import type { SetRail } from "@/lib/rail";
 
 const ORDER = [1, 5, 3, 7, 2, 6, 4, 8];
 const PASSES = [
@@ -91,7 +92,7 @@ function Gauge({ value, target }: { value: number; target: number }) {
   );
 }
 
-export function TorqueSequence({ onDone }: { onDone: () => void }) {
+export function TorqueSequence({ onDone, setRail }: { onDone: () => void; setRail: SetRail }) {
   const [toolOk, setToolOk] = useState(false);
   const [pass, setPass] = useState(0);
   const [idx, setIdx] = useState(0);
@@ -101,6 +102,11 @@ export function TorqueSequence({ onDone }: { onDone: () => void }) {
   const relax = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => () => { if (relax.current) clearTimeout(relax.current); }, []);
+
+  useEffect(() => {
+    setRail(toolOk ? null : { label: "Scan torque wrench", run: () => setToolOk(true) });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [toolOk]);
 
   const next = ORDER[idx];
   const complete = pass === 1 && idx >= ORDER.length;
@@ -135,9 +141,6 @@ export function TorqueSequence({ onDone }: { onDone: () => void }) {
           Scan the torque wrench. The build record needs the tool serial, and an out-of-cal
           tool has to stop the step — not get caught at buy-off.
         </p>
-        <button className="btn btn-primary btn-xl w-full" onClick={() => setToolOk(true)}>
-          Scan torque wrench
-        </button>
       </div>
     );
   }

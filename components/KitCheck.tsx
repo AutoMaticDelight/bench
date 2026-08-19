@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { Fastener } from "@/lib/data";
+import type { SetRail } from "@/lib/rail";
 import { actions, useBench } from "@/lib/store";
 import { IconAlert, IconCamera, IconCheck, IconRunner, IconX } from "./Icon";
 import { PartArt } from "./art/Parts";
@@ -22,12 +23,14 @@ export function KitCheck({
   serial,
   station,
   onResolved,
+  setRail,
 }: {
   fasteners: Fastener[];
   wo: string;
   serial: string;
   station: string;
   onResolved: (ok: boolean) => void;
+  setRail: SetRail;
 }) {
   const [phase, setPhase] = useState<Phase>("idle");
   const bench = useBench();
@@ -44,6 +47,25 @@ export function KitCheck({
   useEffect(() => {
     if (delivered) onResolved(true);
   }, [delivered, onResolved]);
+
+  const nProblems = problems.length;
+  const nRaised = raised.length;
+  useEffect(() => {
+    if (phase === "idle") {
+      setRail({ label: "Capture kit tray", run: () => setPhase("capturing") });
+    } else if (phase === "capturing") {
+      setRail({ label: "Reading kit tray…", disabled: true });
+    } else if (nProblems === 0) {
+      setRail(null);
+    } else if (nRaised === 0) {
+      setRail({ label: `Page supply — ${nProblems} lines`, run: pageSupply });
+    } else if (!delivered) {
+      setRail({ label: "Waiting on supply", disabled: true });
+    } else {
+      setRail(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, nProblems, nRaised, delivered]);
 
   function pageSupply() {
     const made = actions.raiseShortage(
@@ -93,10 +115,6 @@ export function KitCheck({
             ))}
           </ul>
         </div>
-        <button onClick={() => setPhase("capturing")} className="btn btn-primary btn-xl w-full">
-          <IconCamera size={28} />
-          Capture kit tray
-        </button>
         <p className="t-caption">
           Counting by eye against a printed list is where this goes wrong today — the
           wrong washer series looks identical at arm&apos;s length.
@@ -155,9 +173,7 @@ export function KitCheck({
             </div>
 
             <div className="min-w-0 flex-1">
-              <p className="t-id-lg">
-                {f.pn}
-              </p>
+              <p className="t-id-lg whitespace-nowrap">{f.pn}</p>
               <p className="t-caption truncate">{f.nomenclature}</p>
 
               {v === "ok" && <p className="t-sub mt-2 fg-go">Verified · bin {f.bin}</p>}
@@ -199,7 +215,7 @@ export function KitCheck({
 
             {v !== "wrong" && (
               <div className="flex shrink-0 items-center gap-3 self-center">
-                <PartArt pn={f.pn} size={76} />
+                <PartArt pn={f.pn} size={60} />
                 <p className={v === "ok" ? "t-num fg-go leading-none" : "t-num fg-stop leading-none"}>
                   {f.found}
                   <span className="t-head" style={{ opacity: 0.55 }}>/{f.qty}</span>
@@ -221,10 +237,6 @@ export function KitCheck({
               Do not begin installation. Two lines are not right at the bench.
             </p>
           </div>
-          <button onClick={pageSupply} className="btn btn-primary btn-xl mt-3 w-full">
-            <IconRunner size={26} />
-            Page supply — {problems.length} lines
-          </button>
         </div>
       )}
 
@@ -265,11 +277,6 @@ export function KitCheck({
         </div>
       )}
 
-      {problems.length === 0 && (
-        <button onClick={() => onResolved(true)} className="btn btn-go btn-xl mt-1 w-full">
-          <IconCheck size={26} /> Kit verified
-        </button>
-      )}
     </div>
   );
 }
