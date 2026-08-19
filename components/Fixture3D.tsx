@@ -24,9 +24,11 @@ export function Fixture3D() {
       cam.position.set(4.4, 3.0, 5.2);
 
       const gl = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-      gl.setPixelRatio(Math.min(devicePixelRatio, 2));
+      gl.setPixelRatio(Math.min(devicePixelRatio, 1.75));
       gl.shadowMap.enabled = true;
       gl.shadowMap.type = THREE.PCFSoftShadowMap;
+      gl.domElement.style.display = "block";
+      gl.domElement.style.maxWidth = "100%";
       el.appendChild(gl.domElement);
 
       const alu = new THREE.MeshStandardMaterial({ color: 0xb4bcc4, metalness: 0.82, roughness: 0.38 });
@@ -63,7 +65,7 @@ export function Fixture3D() {
 
       scene.add(new THREE.HemisphereLight(0xdfe6ee, 0x0b0d0f, 1.05));
       const key = new THREE.DirectionalLight(0xffffff, 2.1);
-      key.position.set(5, 7, 4); key.castShadow = true; key.shadow.mapSize.set(1024, 1024);
+      key.position.set(5, 7, 4); key.castShadow = true; key.shadow.mapSize.set(512, 512);
       scene.add(key);
       const rim = new THREE.DirectionalLight(0x4c8dff, 0.9);
       rim.position.set(-5, 2, -4); scene.add(rim);
@@ -85,7 +87,7 @@ export function Fixture3D() {
 
       const size = () => {
         const w = el.clientWidth, h = el.clientHeight;
-        cam.aspect = w / h; cam.updateProjectionMatrix(); gl.setSize(w, h, false);
+        cam.aspect = w / h; cam.updateProjectionMatrix(); gl.setSize(w, h);
       };
       size();
       const ro = new ResizeObserver(size); ro.observe(el);
