@@ -78,7 +78,7 @@ export function FlangeArt() {
 /** Side elevation of the hinge fitting for the placement step. */
 export function BracketArt() {
   return (
-    <svg viewBox="0 0 220 132" className="mx-auto block w-full fg-dim" style={{ maxWidth: "22rem" }} aria-label="Hinge fitting, side elevation" role="img">
+    <svg viewBox="0 0 220 132" className="block w-full fg-dim" aria-label="Hinge fitting, side elevation" role="img">
       <g {...stroke}>
         {/* panel rail it seats against */}
         <path d="M14 96h192" strokeWidth={2} />

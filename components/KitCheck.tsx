@@ -33,6 +33,7 @@ export function KitCheck({
   setRail: SetRail;
 }) {
   const [phase, setPhase] = useState<Phase>("idle");
+  const [escalated, setEscalated] = useState(false);
   const bench = useBench();
   const problems = fasteners.filter((f) => verdictOf(f) !== "ok");
   const raised = bench.shortages.filter((s) => s.wo === wo);
@@ -58,9 +59,9 @@ export function KitCheck({
     } else if (nProblems === 0) {
       setRail(null);
     } else if (nRaised === 0) {
-      setRail({ label: `Page supply — ${nProblems} lines`, run: pageSupply });
+      setRail({ label: `Alert supply — ${nProblems} lines`, run: pageSupply });
     } else if (!delivered) {
-      setRail({ label: "Waiting on supply", disabled: true });
+      setRail({ label: "Supply alerted — waiting on delivery", disabled: true });
     } else {
       setRail(null);
     }
@@ -227,16 +228,34 @@ export function KitCheck({
       })}
 
       {problems.length > 0 && raised.length === 0 && (
-        <div className="mt-1">
-          <div
-            className="panel flex items-start gap-3"
-            style={{ padding: "var(--pad)", background: "var(--hold-soft)", borderColor: "transparent" }}
-          >
-            <IconAlert size={22} className="shrink-0 fg-hold" />
-            <p className="t-sub">
-              Do not begin installation. Two lines are not right at the bench.
-            </p>
+        <div className="panel" style={{ padding: "var(--pad)", borderColor: "var(--color-stop)" }}>
+          <div className="flex items-start gap-3">
+            <IconAlert size={24} className="mt-0.5 shrink-0 fg-stop" />
+            <div>
+              <p className="t-head fg-stop">Cannot proceed — {problems.length} lines wrong</p>
+              <p className="t-sub mt-1" style={{ color: "var(--fg-dim)" }}>
+                You cannot fix this at the bench. Alert someone who can.
+              </p>
+            </div>
           </div>
+
+          <button onClick={pageSupply} className="btn btn-primary btn-xl mt-4 w-full">
+            <IconRunner size={26} />
+            Alert supply runner — bring {problems.length} lines
+          </button>
+
+          <button
+            onClick={() => setEscalated((e) => !e)}
+            className="btn btn-outline mt-2 w-full"
+            style={escalated ? { borderColor: "var(--color-hold)", color: "var(--color-hold)" } : undefined}
+          >
+            {escalated ? "✓ Bay lead will be notified too" : "Also notify the bay lead"}
+          </button>
+
+          <p className="t-caption mt-3">
+            A wrong part in a sealed kit is a kitting error, not a bench problem — the lead
+            wants to know before the next three kits go out with it.
+          </p>
         </div>
       )}
 
@@ -270,6 +289,9 @@ export function KitCheck({
               );
             })}
           </ol>
+          {escalated && (
+            <p className="t-sub fg-hold mt-3">Bay lead notified — kitting error on K-2291</p>
+          )}
           <p className="t-caption mt-3">
             Runner is simulated for the demo. Open the planner board in a second tab to watch
             this land there live.

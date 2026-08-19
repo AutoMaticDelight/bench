@@ -381,6 +381,7 @@ body {
 @utility chip-mute { background: var(--panel-2);   color: var(--fg-mute); }
 
 @utility rule { border-top: 1px solid var(--line-soft); }
+@utility rounded-token { border-radius: var(--radius); }
 
 /* Scanline shimmer for the kit-check capture state */
 @keyframes scan {

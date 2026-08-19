@@ -157,10 +157,13 @@ export function TorqueSequence({ onDone, setRail }: { onDone: () => void; setRai
       </div>
 
       <div className="panel" style={{ padding: "var(--pad)" }}>
-        <div className="flex items-baseline justify-between">
-          <p className="t-label" style={{ color: complete ? "var(--color-go)" : "var(--fg)" }}>
-            {complete ? "Both passes complete" : PASSES[pass].label}
-          </p>
+        <div className="flex items-baseline justify-between gap-3">
+          <div>
+            <p className="t-label" style={{ color: complete ? "var(--color-go)" : "var(--fg)" }}>
+              {complete ? "Both passes complete" : PASSES[pass].label}
+            </p>
+            <p className="t-id-lg mt-0.5">{complete ? "45 in-lbf ±3" : PASSES[pass].target}</p>
+          </div>
           <span className={complete ? "chip chip-go" : pass === 1 ? "chip chip-hold" : "chip chip-mute"}>
             {idx} of 8
           </span>

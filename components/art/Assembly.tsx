@@ -73,7 +73,7 @@ export function AssemblyDiagram({ done, current }: { done: number; current: numb
   };
 
   return (
-    <svg viewBox="0 0 300 108" className="w-full" role="img"
+    <svg viewBox="0 0 300 108" className="mx-auto block w-full" style={{ maxWidth: "26rem" }} role="img"
       aria-label="Fastener stack-up, coloured by assembly progress">
       {/* joint centreline */}
       <path d="M6 52h288" stroke="var(--fg-mute)" strokeWidth={0.6} strokeDasharray="9 3 2 3" opacity={0.4} fill="none" />

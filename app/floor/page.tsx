@@ -48,6 +48,7 @@ export default function Floor() {
     <div data-surface="floor" className="flex h-dvh flex-col bg-bg">
       {/* ---- status rail: who, what, where. Never scrolls away. ---- */}
       <header className="shrink-0 border-b border-line" style={{ padding: "var(--pad)" }}>
+        <div className="mx-auto w-full max-w-3xl">
         <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
           <div className="flex items-baseline gap-2.5">
             <span className="t-id-lg">{WO.id}</span>
@@ -69,41 +70,18 @@ export default function Floor() {
             ))}
           </div>
         </div>
+        </div>
       </header>
 
       {/* ---- the step. One task, one screen. ---- */}
       <main className="min-h-0 flex-1 overflow-y-auto" style={{ padding: "var(--pad)" }}>
+        <div className="mx-auto w-full max-w-3xl">
         <h1 className="t-title">{step.title}</h1>
-        <p className="t-body mt-2" style={{ color: "var(--fg-dim)" }}>{step.instruction}</p>
+        <p className="t-sub mt-1" style={{ color: "var(--fg-dim)" }}>{step.instruction}</p>
 
-        {step.spec && (
-          <dl className="mt-4 grid grid-cols-2" style={{ gap: "var(--gap)" }}>
-            {step.spec.map((s) => (
-              <div
-                key={s.label}
-                className="panel"
-                style={{ padding: "var(--pad)", gridColumn: s.big ? "1 / -1" : undefined }}
-              >
-                <dt className="t-label">{s.label}</dt>
-                <dd className={s.big ? "t-mega mt-1" : s.mono ? "t-id mt-1" : "t-head mt-1"}>{s.value}</dd>
-              </div>
-            ))}
-          </dl>
-        )}
-
-        <div className="mt-5">
-          {step.kind === "work" && (
-            <figure className="panel" style={{ padding: "var(--pad)" }}>
-              <BracketArt />
-              <figcaption className="t-caption mt-2">
-                100-4412-01 seated on the −Y panel rail. Datum A up, alignment pin through the
-                lug bore until the washer stack goes on.
-              </figcaption>
-            </figure>
-          )}
-
+        <div className="mt-4">
           {step.substeps && (
-            <div className="mt-4">
+            <div>
               <SubSteps items={step.substeps} onDone={() => setReady(true)} />
             </div>
           )}
@@ -168,6 +146,44 @@ export default function Floor() {
             </div>
           )}
         </div>
+
+        {(step.spec || step.kind === "work") && (
+          <section className="mt-6">
+            <div className="rule flex items-center gap-3 pt-4">
+              <span className="t-label">Reference</span>
+              <span className="h-px flex-1" style={{ background: "var(--line-soft)" }} />
+            </div>
+        {step.spec && (
+          <dl className="mt-3 flex flex-wrap" style={{ gap: "var(--gap)" }}>
+            {step.spec.map((sp) =>
+              sp.big ? (
+                <div key={sp.label} className="panel w-full" style={{ padding: "var(--pad)" }}>
+                  <dt className="t-label">{sp.label}</dt>
+                  <dd className="t-mega mt-1">{sp.value}</dd>
+                </div>
+              ) : (
+                <div key={sp.label} className="panel flex-1" style={{ padding: "calc(var(--pad) * 0.7)", minWidth: "11rem" }}>
+                  <dt className="t-label">{sp.label}</dt>
+                  <dd className={sp.mono ? "t-id mt-0.5" : "t-sub mt-0.5"}>{sp.value}</dd>
+                </div>
+              ),
+            )}
+          </dl>
+        )}
+
+          {step.kind === "work" && (
+            <figure className="panel flex items-center gap-4" style={{ padding: "var(--pad)" }}>
+              <div className="shrink-0" style={{ width: "13rem" }}><BracketArt /></div>
+              <figcaption className="t-caption">
+                100-4412-01 seated on the −Y panel rail. Datum A up, alignment pin through the
+                lug bore until the washer stack goes on.
+              </figcaption>
+            </figure>
+          )}
+
+          </section>
+        )}
+        </div>
       </main>
 
       {/* ---- commit rail: the action is always where the thumb already is ---- */}
@@ -175,6 +191,7 @@ export default function Floor() {
         className="shrink-0 border-t border-line"
         style={{ padding: "var(--pad)", paddingBottom: "calc(var(--pad) + env(safe-area-inset-bottom))" }}
       >
+        <div className="mx-auto w-full max-w-3xl">
         {step.kind === "buyoff" ? (
           <HoldToCommit label="Hold to sign buy-off" sub="1.2 seconds · badge 4471" onCommit={advance} />
         ) : rail ? (
@@ -208,6 +225,7 @@ export default function Floor() {
             <IconFlag size={22} /> Flag an issue
           </button>
           <span className="t-caption">{WO.operator.name} · {WO.operator.badge}</span>
+        </div>
         </div>
       </footer>
 
