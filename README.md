@@ -4,13 +4,11 @@ Build-execution software for a spacecraft factory floor, built as a concept stud
 
 **Live:** [bench-seven.vercel.app](https://bench-seven.vercel.app) · [`/floor`](https://bench-seven.vercel.app/floor) (technician, open at tablet width) · [`/plan`](https://bench-seven.vercel.app/plan) (planner, desktop) · [`/`](https://bench-seven.vercel.app) (the six design decisions and why)
 
-Open `/floor` and `/plan` side by side, run the kit check on the floor, and watch the shortage land on the planner board.
+Open `/floor` and `/plan` side by side, run the kit check on the floor, and watch the shortage land on the planner board. That is what the two screenshots below show: the technician finds the wrong washer in the bin, and the planner sees it a moment later.
 
-<p>
-  <img src="docs/floor.png" alt="Technician view: step 1 of 5, verify hardware kit at the bench" width="360">
-  &nbsp;&nbsp;
-  <img src="docs/plan.png" alt="Planner board: stations at risk, steps per hour, work in process, kit shortages, MRB queue" width="600">
-</p>
+<img src="docs/floor.png" alt="Technician view: kit check at the bench. The screw line is verified in green; the washer line is flagged in red because the bin holds NAS1149D0332K, a thinner washer with the same diameter and finish." width="720">
+
+<img src="docs/plan.png" alt="Planner board a moment later: supply outstanding, one open shortage with the wrong part named, and a runner to assign, next to steps per hour, work in process, and the MRB queue." width="900">
 
 ## What it does
 
