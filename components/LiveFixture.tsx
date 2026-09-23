@@ -3,29 +3,29 @@
 import { useEffect, useRef, useState } from "react";
 import { IconAlert, IconArrow, IconCamera, IconCheck, IconX } from "./Icon";
 
-/* The top of the floor screen is the camera, not a photo. The technician lifts
-   the iPad at the fixture and the feed is live. Moving the iPad to the side
-   sweeps the view; the fixture's 3D outline builds over the feed as the sweep
-   accumulates, then each fastener on the bolt circle resolves to a verdict.
-   The next step sits beside the feed, never below it.
+/* The top of the floor screen is the fixture, moving, not a photo.
 
-   Honest limit: the feed and the motion are real (rear camera, gyroscope).
-   The "model from motion" is a concept effect driven by yaw, not photogrammetry.
-   With no camera or no motion (a laptop), the feed is a drawn stand-in and the
-   model builds on its own so the screen still reads. */
+   By default it plays a clip of the fixture: the view sweeps to the side the
+   way a hand holding the iPad would, and the eight fasteners on the bolt circle
+   resolve to a verdict as the sweep completes. Nobody has to grant a camera
+   for the screen to make its point.
+
+   "Use camera" switches to the rear camera for a room with the real part in it.
+   Then the sweep comes from the gyroscope and the fixture's outline builds over
+   the live feed. Honest limit: that outline is driven by yaw, not photogrammetry.
+
+   The current step and the one after it sit beside the feed, never below it. */
 
 type Verdict = "go" | "hold" | "stop";
+type Mode = "clip" | "live";
 type Cam = "asking" | "live" | "off";
 type Motion = "unknown" | "needs-permission" | "on" | "pointer";
 
 /* eight bolts on the circle, clockwise from 12 o'clock */
 const VERDICTS: Verdict[] = ["go", "go", "hold", "go", "go", "stop", "go", "go"];
-const NOTE: Record<Verdict, string> = {
-  go: "correct",
-  hold: "wrong washer stack",
-  stop: "missing",
-};
-const SWEEP_FOR_FULL = 110; // degrees of yaw to finish the model
+const NOTE: Record<Verdict, string> = { go: "correct", hold: "wrong washer stack", stop: "missing" };
+const CLIP_RESOLVE = 0.66; // fraction of the clip where the rings appear
+const SWEEP_FOR_FULL = 110; // degrees of yaw to finish the model, live mode
 const RESOLVE_AT = 0.8;
 
 export function LiveFixture({
@@ -41,6 +41,7 @@ export function LiveFixture({
   const yaw = useRef(0);
   const lastAlpha = useRef<number | null>(null);
   const lastMotionAt = useRef(0);
+  const [mode, setMode] = useState<Mode>("clip");
   const [cam, setCam] = useState<Cam>("asking");
   const [motion, setMotion] = useState<Motion>("unknown");
   const [coverage, setCoverage] = useState(0);
@@ -50,17 +51,25 @@ export function LiveFixture({
   const okCount = VERDICTS.length - bad.length;
   const first = bad.find((b) => b.v === "stop") ?? bad[0];
 
-  /* ---- camera ---- */
+  /* ---- clip mode: the HUD follows the clip's clock ---- */
+  function onClipTime() {
+    const v = video.current;
+    if (!v || mode !== "clip" || !v.duration) return;
+    const c = Math.min(1, v.currentTime / (v.duration * CLIP_RESOLVE));
+    cov.current = c;
+    setCoverage(c);
+  }
+
+  /* ---- live mode: rear camera ---- */
   useEffect(() => {
+    if (mode !== "live") return;
     let stream: MediaStream | null = null;
     let stop = false;
+    setCam("asking");
     (async () => {
       try {
         if (!navigator.mediaDevices?.getUserMedia) throw new Error("no camera api");
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: "environment" } },
-          audio: false,
-        });
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false });
         if (stop) { stream.getTracks().forEach((t) => t.stop()); return; }
         if (video.current) {
           video.current.srcObject = stream;
@@ -71,10 +80,10 @@ export function LiveFixture({
         setCam("off");
       }
     })();
-    return () => { stop = true; stream?.getTracks().forEach((t) => t.stop()); };
-  }, []);
+    return () => { stop = true; stream?.getTracks().forEach((t) => t.stop()); if (video.current) video.current.srcObject = null; };
+  }, [mode]);
 
-  /* ---- motion: gyroscope on the iPad, pointer drag anywhere else ---- */
+  /* ---- live mode: gyroscope on the iPad, pointer drag anywhere else ---- */
   function sweep(deg: number) {
     yaw.current += deg;
     cov.current = Math.min(1, cov.current + Math.abs(deg) / SWEEP_FOR_FULL);
@@ -92,6 +101,8 @@ export function LiveFixture({
     setMotion("on");
   }
   useEffect(() => {
+    if (mode !== "live") return;
+    cov.current = 0; yaw.current = 0; setCoverage(0);
     const DOE = (window as unknown as { DeviceOrientationEvent?: { requestPermission?: () => Promise<string> } }).DeviceOrientationEvent;
     if (DOE && typeof DOE.requestPermission === "function") { setMotion("needs-permission"); return; }
     if ("DeviceOrientationEvent" in window) {
@@ -100,7 +111,7 @@ export function LiveFixture({
     }
     setMotion("pointer");
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [mode]);
   async function enableMotion() {
     try {
       const DOE = (window as unknown as { DeviceOrientationEvent: { requestPermission: () => Promise<string> } }).DeviceOrientationEvent;
@@ -110,8 +121,9 @@ export function LiveFixture({
     } catch { setMotion("pointer"); }
   }
 
-  /* ---- the model over the feed ---- */
+  /* ---- live mode: the fixture's outline builds over the feed ---- */
   useEffect(() => {
+    if (mode !== "live") return;
     let stop = false;
     let cleanup = () => {};
     (async () => {
@@ -135,7 +147,6 @@ export function LiveFixture({
       gl.domElement.style.inset = "0";
       el.appendChild(gl.domElement);
 
-      /* every part carries the coverage at which it appears */
       type Part = { fill: InstanceType<typeof THREE.Mesh>; edge: InstanceType<typeof THREE.LineSegments>; t: number };
       const parts: Part[] = [];
       const g = new THREE.Group();
@@ -156,10 +167,7 @@ export function LiveFixture({
         const a = ((-90 + i * 45) * Math.PI) / 180, R = 1.16;
         const pos: [number, number, number] = [R * Math.cos(a), 0.02, R * Math.sin(a)];
         add(new THREE.CylinderGeometry(0.17, 0.17, 0.16, 16), 0.32 + i * 0.05, pos);
-        const ring = new THREE.Mesh(
-          new THREE.TorusGeometry(0.27, 0.035, 10, 40),
-          new THREE.MeshBasicMaterial({ color: cDim, transparent: true, opacity: 0 }),
-        );
+        const ring = new THREE.Mesh(new THREE.TorusGeometry(0.27, 0.035, 10, 40), new THREE.MeshBasicMaterial({ color: cDim, transparent: true, opacity: 0 }));
         ring.rotation.x = Math.PI / 2; ring.position.set(pos[0], 0.14, pos[2]);
         g.add(ring); rings.push({ mesh: ring, i });
       }
@@ -168,35 +176,25 @@ export function LiveFixture({
       add(new THREE.CylinderGeometry(0.19, 0.19, 0.46, 24), 0.92, [0, 1.47, 0], Math.PI / 2);
       scene.add(g);
 
-      const size = () => {
-        const w = el.clientWidth, h = el.clientHeight;
-        camera.aspect = w / h; camera.updateProjectionMatrix(); gl.setSize(w, h);
-      };
+      const size = () => { const w = el.clientWidth, h = el.clientHeight; camera.aspect = w / h; camera.updateProjectionMatrix(); gl.setSize(w, h); };
       size();
       const ro = new ResizeObserver(size); ro.observe(el);
 
-      /* pointer drag sweeps too, so a laptop can build it by hand */
       let px: number | null = null;
       const down = (e: PointerEvent) => { px = e.clientX; setMotion((m) => (m === "on" ? m : "pointer")); };
       const move = (e: PointerEvent) => { if (px == null) return; sweep((e.clientX - px) / 3); px = e.clientX; };
       const up = () => { px = null; };
       el.addEventListener("pointerdown", down); window.addEventListener("pointermove", move); window.addEventListener("pointerup", up);
 
-      const t0 = performance.now();
       let raf = 0, shown = -1;
       const loop = (now: number) => {
         raf = requestAnimationFrame(loop);
-        /* no hand on it for a while: build on its own so the screen still reads */
-        const idle = now - Math.max(lastMotionAt.current, t0) > 2500;
-        if (idle && cov.current < 1) { cov.current = Math.min(1, cov.current + 0.0025); yaw.current += 0.35; }
         const c = cov.current;
         const rounded = Math.round(c * 100);
         if (rounded !== shown) { shown = rounded; setCoverage(c); }
-
         const az = (yaw.current * Math.PI) / 180;
         camera.position.set(6.4 * Math.sin(az), 3.4, 6.4 * Math.cos(az));
         camera.lookAt(0, 0.45, 0);
-
         for (const p of parts) {
           const k = Math.max(0, Math.min(1, (c - p.t) / 0.12));
           (p.fill.material as InstanceType<typeof THREE.MeshBasicMaterial>).opacity = k * 0.16;
@@ -221,49 +219,61 @@ export function LiveFixture({
       };
     })();
     return () => { stop = true; cleanup(); };
-  }, []);
+  }, [mode]);
 
   const pct = Math.round(coverage * 100);
+  const live = mode === "live";
 
   return (
     <section className="panel overflow-hidden" style={{ borderRadius: "var(--radius)" }}>
-      <div className="grid md:grid-cols-[3fr_2fr]">
-        {/* ---- the feed, with the model building over it ---- */}
+      <div className="grid grid-cols-1 md:grid-cols-2">
+        {/* ---- the fixture, moving ---- */}
         <div
           ref={host}
-          className="relative select-none"
-          style={{ height: "clamp(220px, 34vh, 360px)", background: "var(--bg)", cursor: "grab", touchAction: "none" }}
+          className="relative min-w-0 select-none"
+          style={{ height: "clamp(260px, 46vh, 520px)", background: "var(--bg)", cursor: live ? "grab" : "default", touchAction: "none" }}
         >
-          <video
-            ref={video}
-            muted
-            playsInline
-            autoPlay
-            className="absolute inset-0 h-full w-full object-cover"
-            style={{ opacity: cam === "live" ? 1 : 0 }}
-          />
-          {cam !== "live" && (
-            <div
-              className="absolute inset-0"
-              style={{ background: "radial-gradient(ellipse at 50% 60%, var(--panel) 0%, var(--bg) 75%)" }}
-            />
+          {live ? (
+            <video ref={video} muted playsInline autoPlay className="absolute inset-0 h-full w-full object-cover" style={{ opacity: cam === "live" ? 1 : 0 }} />
+          ) : (
+            <video
+              ref={video}
+              muted
+              playsInline
+              autoPlay
+              loop
+              poster="/fixture.jpg"
+              onTimeUpdate={onClipTime}
+              className="absolute inset-0 h-full w-full object-cover"
+            >
+              <source src="/fixture.mp4" type="video/mp4" />
+            </video>
+          )}
+          {live && cam !== "live" && (
+            <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 50% 60%, var(--panel) 0%, var(--bg) 75%)" }} />
           )}
 
           {/* HUD */}
-          <div className="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between" style={{ padding: "calc(var(--pad) * 0.6)" }}>
-            <span className={`chip ${cam === "live" ? "chip-info" : "chip-mute"}`}>
-              <IconCamera size={16} /> {cam === "live" ? "Live" : cam === "asking" ? "Camera…" : "Demo feed"}
+          <div className="absolute inset-x-0 top-0 flex items-center justify-between" style={{ padding: "calc(var(--pad) * 0.6)" }}>
+            <span className={`chip ${live && cam === "live" ? "chip-info" : "chip-mute"}`}>
+              <IconCamera size={16} /> {live ? (cam === "live" ? "Live" : cam === "asking" ? "Camera…" : "No camera") : "100-4412-01"}
             </span>
-            <span className="t-caption" style={{ color: "var(--fg)", textShadow: "0 1px 2px var(--scrim)" }}>
-              {resolved ? "Model complete" : motion === "on" ? "Move the iPad to the side" : "Drag or move the iPad to the side"}
-            </span>
+            {live ? (
+              <button onClick={() => setMode("clip")} className="btn btn-ghost whitespace-nowrap" style={{ minHeight: "2.25rem" }}>Back</button>
+            ) : (
+              <button onClick={() => setMode("live")} className="btn btn-ghost whitespace-nowrap" style={{ minHeight: "2.25rem" }}>
+                <IconCamera size={18} /> Use camera
+              </button>
+            )}
           </div>
 
-          <div className="absolute inset-x-0 bottom-0" style={{ padding: "calc(var(--pad) * 0.6)", background: "linear-gradient(to top, var(--scrim), transparent)" }}>
+          <div className="pointer-events-none absolute inset-x-0 bottom-0" style={{ padding: "calc(var(--pad) * 0.6)", background: "linear-gradient(to top, var(--scrim), transparent)" }}>
             {!resolved ? (
-              <div className="pointer-events-none">
+              <div>
                 <div className="flex items-center justify-between">
-                  <span className="t-label" style={{ color: "var(--fg)" }}>Building model</span>
+                  <span className="t-label" style={{ color: "var(--fg)" }}>
+                    {live ? (motion === "on" ? "Move the iPad to the side" : "Drag or move the iPad to the side") : "Checking the bolt circle"}
+                  </span>
                   <span className="t-id" style={{ color: "var(--fg)" }}>{pct}%</span>
                 </div>
                 <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full" style={{ background: "var(--line)" }}>
@@ -271,7 +281,7 @@ export function LiveFixture({
                 </div>
               </div>
             ) : (
-              <div className="pointer-events-none flex flex-wrap items-center gap-x-3 gap-y-1">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                 <span className="flex items-center gap-1.5">
                   {VERDICTS.map((v, i) => (
                     <span
@@ -296,7 +306,7 @@ export function LiveFixture({
             )}
           </div>
 
-          {motion === "needs-permission" && (
+          {live && motion === "needs-permission" && (
             <button onClick={enableMotion} className="btn btn-ghost absolute" style={{ right: "calc(var(--pad) * 0.6)", bottom: "calc(var(--ctl-h) + var(--pad) * 0.4)" }}>
               Enable motion
             </button>
@@ -304,21 +314,18 @@ export function LiveFixture({
         </div>
 
         {/* ---- the next step, always beside the feed ---- */}
-        <div className="flex flex-col border-t border-line md:border-l md:border-t-0" style={{ padding: "var(--pad)", gap: "calc(var(--gap) * 0.75)" }}>
+        <div className="flex min-w-0 flex-col border-t border-line md:border-l md:border-t-0" style={{ padding: "var(--pad)", gap: "calc(var(--gap) * 0.75)" }}>
           <div className="flex items-center justify-between">
             <span className="t-label">Now · step {now.seq}</span>
             {resolved && first && (
-              <span className={`chip ${first.v === "stop" ? "chip-stop" : "chip-hold"}`}>
-                Start at #{first.n}
-              </span>
+              <span className={`chip ${first.v === "stop" ? "chip-stop" : "chip-hold"}`}>Start at #{first.n}</span>
             )}
           </div>
           <p className="t-head">{now.title}</p>
-          <p
-            className="t-caption"
-            style={{ display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}
-          >
-            {resolved && first ? `Bolt #${first.n} is ${NOTE[first.v]}. Fix that first, then ${now.instruction.charAt(0).toLowerCase()}${now.instruction.slice(1)}` : now.instruction}
+          <p className="t-caption" style={{ display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+            {resolved && first
+              ? `Bolt #${first.n} is ${NOTE[first.v]}. Fix that first, then ${now.instruction.charAt(0).toLowerCase()}${now.instruction.slice(1)}`
+              : now.instruction}
           </p>
           {then && (
             <div className="rule mt-auto flex items-center gap-2 pt-3">
