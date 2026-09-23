@@ -13,6 +13,7 @@ import { NcrSheet } from "@/components/NcrSheet";
 import { IconArrow, IconCamera, IconCheck, IconFlag } from "@/components/Icon";
 import { BracketArt } from "@/components/art/Parts";
 import { SubSteps } from "@/components/SubSteps";
+import { LiveFixture } from "@/components/LiveFixture";
 
 export default function Floor() {
   const [i, setI] = useState(0);
@@ -76,6 +77,13 @@ export default function Floor() {
       {/* ---- the step. One task, one screen. ---- */}
       <main className="min-h-0 flex-1 overflow-y-auto" style={{ padding: "var(--pad)" }}>
         <div className="mx-auto w-full max-w-3xl">
+        {/* the fixture, live, with the next step beside it. Never a static image. */}
+        <div className="mb-4">
+          <LiveFixture
+            now={{ seq: step.seq, title: step.title, instruction: step.instruction }}
+            then={WO.steps[i + 1] ? { seq: WO.steps[i + 1].seq, title: WO.steps[i + 1].title } : undefined}
+          />
+        </div>
         <h1 className="t-title">{step.title}</h1>
         <p className="t-sub mt-1" style={{ color: "var(--fg-dim)" }}>{step.instruction}</p>
 
